@@ -61,7 +61,7 @@ export abstract class IQuery {
 export abstract class IMutation {
     abstract acheterQtProduit(user: string, id: number, quantite: number): Nullable<Product> | Promise<Nullable<Product>>;
 
-    abstract lancerProductionProduit(user: string, id: number): Nullable<Product> | Promise<Nullable<Product>>;
+    abstract lancerProductionProduit(user: string, id: number): Product | Promise<Product>;
 
     abstract engagerManager(user: string, name: string): Nullable<Palier> | Promise<Nullable<Palier>>;
 

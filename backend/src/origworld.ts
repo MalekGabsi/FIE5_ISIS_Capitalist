@@ -4,7 +4,7 @@ export const origworld = {
   name: 'Football Empire',
   logo: 'icones/football-empire.png',
 
-  money: 0,
+  money: 1000,
   score: 0,
   totalangels: 0,
   activeangels: 0,

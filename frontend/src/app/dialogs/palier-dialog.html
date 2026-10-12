@@ -1,0 +1,43 @@
+<h2 mat-dialog-title>{{ config.title }}</h2>
+
+<mat-dialog-content>
+  <p class="intro">{{ config.intro }}</p>
+
+  @for (row of rows(); track row.target + row.palier.name) {
+    @let item = row.palier;
+    <div class="row" [class.affordable]="config.action && canAfford(item)" animate.leave="row-leave">
+      <img class="thumb" [src]="game.imageUrl(item.logo)" [alt]="item.name" />
+      <div class="info">
+        <strong>{{ item.name }}</strong>
+        <span class="meta">
+          @if (kind === 'managers') {
+            Runs {{ row.target }} automatically
+          } @else {
+            {{ row.target }} · {{ bonusLabel(item) }}
+          }
+        </span>
+      </div>
+
+      @if (config.action) {
+        <div class="price">
+          @if (kind === 'angelupgrades') {
+            👼 {{ item.seuil | bigNumber }}
+          } @else {
+            ${{ item.seuil | bigNumber }}
+          }
+        </div>
+        <button mat-flat-button [disabled]="!canAfford(item)" (click)="act(item)">
+          {{ config.action }}
+        </button>
+      } @else {
+        <div class="price">{{ row.reached }} / {{ item.seuil }}</div>
+      }
+    </div>
+  } @empty {
+    <p class="empty">{{ config.empty }}</p>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Close</button>
+</mat-dialog-actions>

@@ -1,0 +1,42 @@
+@let world = game.world();
+<h2 mat-dialog-title>Investors</h2>
+
+<mat-dialog-content>
+  <p class="intro">
+    Angel investors boost all revenue. Each active angel adds
+    <strong>{{ world?.angelbonus ?? 0 }}%</strong>. Resetting starts a new season and recruits the
+    angels you earned.
+  </p>
+
+  <div class="stats">
+    <div class="stat">
+      <span class="label">Active angels</span>
+      <span class="value">👼 {{ world?.activeangels ?? 0 | bigNumber }}</span>
+    </div>
+    <div class="stat">
+      <span class="label">Total angels</span>
+      <span class="value">{{ world?.totalangels ?? 0 | bigNumber }}</span>
+    </div>
+    <div class="stat">
+      <span class="label">Revenue bonus</span>
+      <span class="value">×{{ game.angelMultiplier() | bigNumber }}</span>
+    </div>
+    <div class="stat highlight">
+      <span class="label">Gained by resetting</span>
+      <span class="value">+{{ game.claimableAngels() | bigNumber }}</span>
+    </div>
+  </div>
+
+  @if (confirming()) {
+    <p class="warning">
+      Reset sells every product, manager and cash upgrade. Your angels are kept. Are you sure?
+    </p>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Close</button>
+  <button mat-flat-button class="danger" [disabled]="resetting()" (click)="reset()">
+    {{ confirming() ? 'Yes, reset the world' : 'Reset for +' + (game.claimableAngels() | bigNumber) + ' angels' }}
+  </button>
+</mat-dialog-actions>

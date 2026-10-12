@@ -1,0 +1,15 @@
+# GraphQL code generation: typed documents for every operation in queries.graphql,
+# validated against the backend schema file (no running server required).
+overwrite: true
+schema: ../backend/src/schema.graphql
+documents: src/app/graphql/queries.graphql
+generates:
+  src/app/graphql/generated.ts:
+    plugins:
+      - typescript-operations
+      - typed-document-node
+    config:
+      enumsAsTypes: true
+      immutableTypes: true
+      skipTypename: true
+      useTypeImports: true

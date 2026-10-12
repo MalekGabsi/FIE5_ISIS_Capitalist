@@ -1,0 +1,104 @@
+# Operations used by the frontend. The contract is backend/src/schema.graphql.
+# Run `npm run codegen` after editing this file to regenerate generated.ts.
+
+fragment PalierFields on Palier {
+  name
+  logo
+  seuil
+  idcible
+  ratio
+  typeratio
+  unlocked
+}
+
+fragment WorldFields on World {
+  name
+  logo
+  money
+  score
+  totalangels
+  activeangels
+  angelbonus
+  lastupdate
+
+  products {
+    id
+    name
+    logo
+    cout
+    croissance
+    revenu
+    vitesse
+    quantite
+    timeleft
+    managerUnlocked
+
+    paliers {
+      ...PalierFields
+    }
+  }
+
+  allunlocks {
+    ...PalierFields
+  }
+
+  upgrades {
+    ...PalierFields
+  }
+
+  angelupgrades {
+    ...PalierFields
+  }
+
+  managers {
+    ...PalierFields
+  }
+}
+
+query getWorld($user: String!) {
+  getWorld(user: $user) {
+    ...WorldFields
+  }
+}
+
+mutation acheterQtProduit($user: String!, $id: Int!, $quantite: Int!) {
+  acheterQtProduit(user: $user, id: $id, quantite: $quantite) {
+    id
+    quantite
+    cout
+  }
+}
+
+mutation lancerProductionProduit($user: String!, $id: Int!) {
+  lancerProductionProduit(user: $user, id: $id) {
+    id
+    timeleft
+  }
+}
+
+mutation engagerManager($user: String!, $name: String!) {
+  engagerManager(user: $user, name: $name) {
+    name
+    unlocked
+  }
+}
+
+mutation acheterCashUpgrade($user: String!, $name: String!) {
+  acheterCashUpgrade(user: $user, name: $name) {
+    name
+    unlocked
+  }
+}
+
+mutation acheterAngelUpgrade($user: String!, $name: String!) {
+  acheterAngelUpgrade(user: $user, name: $name) {
+    name
+    unlocked
+  }
+}
+
+mutation resetWorld($user: String!) {
+  resetWorld(user: $user) {
+    ...WorldFields
+  }
+}

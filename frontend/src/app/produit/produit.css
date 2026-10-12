@@ -1,0 +1,372 @@
+:host {
+  display: block;
+}
+
+.card {
+  position: relative;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #ffffff, var(--card-bg));
+  border: 2px solid var(--card-border);
+  box-shadow: 0 4px 0 rgb(0 0 0 / 22%);
+  transition: transform 160ms ease;
+}
+
+/* Deeper shadow on hover, faded in via opacity (cheaper than animating box-shadow). */
+.card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 12px 24px rgb(0 0 0 / 28%);
+  opacity: 0;
+  transition: opacity 160ms ease;
+  pointer-events: none;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+}
+
+.card:hover::after {
+  opacity: 1;
+}
+
+/* Green glow while producing. */
+.card::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  box-shadow: 0 0 0 2px var(--pitch-light), 0 0 18px 2px rgb(76 200 110 / 55%);
+  opacity: 0;
+  transition: opacity 250ms ease;
+  pointer-events: none;
+}
+
+.card.producing::before {
+  opacity: 1;
+}
+
+.card.auto {
+  border-color: var(--gold);
+}
+
+.flash {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at 20% 50%, rgb(246 193 43 / 70%), transparent 70%);
+}
+
+.flash[data-tone='manager'] {
+  background: radial-gradient(circle at 50% 50%, rgb(246 193 43 / 80%), rgb(246 193 43 / 15%));
+}
+
+.flash[data-tone='upgrade'] {
+  background: linear-gradient(100deg, transparent, rgb(120 220 140 / 75%), transparent);
+}
+
+.logo-wrap {
+  position: relative;
+  flex: none;
+}
+
+.logo {
+  display: block;
+  width: 86px;
+  height: 86px;
+  padding: 0;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  background: #cfe9d3;
+  box-shadow: 0 3px 0 rgb(0 0 0 / 25%);
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform 120ms ease;
+}
+
+.logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 200ms ease;
+}
+
+.logo:not(:disabled):hover img {
+  transform: scale(1.1);
+}
+
+.logo:not(:disabled):active {
+  transform: scale(0.92);
+}
+
+.logo:disabled {
+  cursor: default;
+}
+
+.card.locked .logo img {
+  filter: grayscale(0.8);
+  opacity: 0.6;
+}
+
+.card.producing .logo img {
+  animation: dribble 1.6s ease-in-out infinite;
+}
+
+@keyframes dribble {
+  0%,
+  100% {
+    transform: rotate(-4deg) scale(1.02);
+  }
+  50% {
+    transform: rotate(4deg) scale(1.06);
+  }
+}
+
+.qty {
+  position: absolute;
+  right: -6px;
+  bottom: -4px;
+  min-width: 30px;
+  padding: 2px 7px;
+  border-radius: 12px;
+  background: var(--pitch-dark);
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.85rem;
+  text-align: center;
+  box-shadow: 0 2px 0 rgb(0 0 0 / 30%);
+}
+
+.float {
+  position: absolute;
+  left: 50%;
+  top: 4px;
+  z-index: 2;
+  white-space: nowrap;
+  font-weight: 800;
+  font-size: 1rem;
+  color: var(--gold);
+  text-shadow: 0 1px 0 #6b4a00, 0 2px 6px rgb(0 0 0 / 45%);
+  pointer-events: none;
+  animation: float-up 1100ms ease-out forwards;
+}
+
+@keyframes float-up {
+  0% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--dx)), 8px) scale(0.8);
+  }
+  15% {
+    opacity: 1;
+    transform: translate(calc(-50% + var(--dx)), 0) scale(1.05);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--dx)), -46px) scale(1);
+  }
+}
+
+.body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.status {
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+.auto-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: var(--gold);
+  color: #3b2a00;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+.pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--pitch-dark);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% {
+    transform: scale(0.55);
+    opacity: 0.45;
+  }
+}
+
+.idle-status {
+  color: var(--muted);
+}
+
+.production {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bar {
+  position: relative;
+  flex: 1;
+  height: 24px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #dfeadf;
+  box-shadow: inset 0 2px 3px rgb(0 0 0 / 15%);
+}
+
+/* Revealed with clip-path from the animation frame loop (no layout work). */
+.fill {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(180deg, #7fdc8f, #2e9b4c);
+  opacity: 0;
+  transition: opacity 300ms ease;
+}
+
+.bar.active .fill {
+  opacity: 1;
+  transition-duration: 120ms;
+}
+
+.shine {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 40%;
+  background: linear-gradient(100deg, transparent, rgb(255 255 255 / 55%), transparent);
+  transform: translateX(-120%);
+}
+
+.bar.active .shine {
+  animation: shine 1.6s linear infinite;
+}
+
+.bar.turbo .shine {
+  animation-duration: 0.7s;
+}
+
+@keyframes shine {
+  to {
+    transform: translateX(300%);
+  }
+}
+
+.bar-label {
+  position: relative;
+  display: block;
+  padding: 0 10px;
+  line-height: 24px;
+  font-weight: 800;
+  font-size: 0.85rem;
+  color: var(--pitch-dark);
+}
+
+.bar.active .bar-label {
+  color: #fff;
+  text-shadow: 0 1px 1px rgb(0 0 0 / 35%);
+}
+
+.time {
+  min-width: 52px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.buy-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.buy {
+  --mat-button-filled-container-color: var(--gold);
+  --mat-button-filled-label-text-color: #3b2a00;
+  font-weight: 800;
+  transition: transform 90ms ease;
+}
+
+.buy:not(:disabled):active {
+  transform: scale(0.95);
+}
+
+.cost {
+  margin-left: 6px;
+  font-weight: 500;
+}
+
+.unit {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .card::after,
+  .logo,
+  .logo img {
+    transition: none;
+  }
+
+  .card:hover {
+    transform: none;
+  }
+
+  .card.producing .logo img,
+  .pulse-dot,
+  .bar.active .shine {
+    animation: none;
+  }
+
+  /* Still fades out (and fires animationend), but without movement. */
+  .float {
+    animation: float-fade 900ms ease-out forwards;
+    transform: translateX(-50%);
+  }
+
+  @keyframes float-fade {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+}

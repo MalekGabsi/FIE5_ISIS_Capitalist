@@ -1,0 +1,148 @@
+@let world = game.world();
+<header class="topbar">
+  <div class="brand">
+    @if (world && !worldLogoFailed()) {
+      <img
+        class="world-logo"
+        [src]="game.imageUrl(world.logo)"
+        [alt]="world.name"
+        (error)="worldLogoFailed.set(true)"
+      />
+    } @else {
+      <span class="world-logo fallback" aria-hidden="true">⚽</span>
+    }
+    <div class="title">
+      <h1>{{ world?.name ?? 'ISIS Capitalist' }}</h1>
+      <span class="subtitle">Manager: {{ game.user() }}</span>
+    </div>
+  </div>
+
+  <div class="scoreboard">
+    <div class="stat-block">
+      <span class="label">Club funds</span>
+      <span #money class="money">${{ game.money() | bigNumber }}</span>
+    </div>
+    @if (world && world.totalangels > 0) {
+      <div class="stat-block">
+        <span class="label">Angels</span>
+        <span class="angels" title="Active angels">
+          👼 {{ world.activeangels | bigNumber }}
+          <small>×{{ game.angelMultiplier() | bigNumber }}</small>
+        </span>
+      </div>
+    }
+  </div>
+
+  <div class="controls">
+    <button
+      mat-flat-button
+      class="qty-mode"
+      (click)="game.cycleQtyMode()"
+      title="Change purchase quantity"
+    >
+      {{ game.qtyMode() === 'max' ? 'Max' : '×' + game.qtyMode() }}
+    </button>
+
+    <label class="player">
+      <mat-icon>person</mat-icon>
+      <input
+        [value]="nameDraft()"
+        (input)="nameDraft.set($any($event.target).value)"
+        (keydown.enter)="submitName()"
+        maxlength="30"
+        aria-label="Player name (press Enter to load)"
+        placeholder="Player name"
+      />
+    </label>
+
+    <button
+      mat-icon-button
+      (click)="game.loadWorld()"
+      [disabled]="game.loading()"
+      title="Reload world from the server"
+      aria-label="Reload world"
+    >
+      <mat-icon>refresh</mat-icon>
+    </button>
+  </div>
+</header>
+
+<div class="layout">
+  <nav class="menu">
+    <button mat-flat-button class="menu-btn" (click)="open('unlocks')">
+      <mat-icon>emoji_events</mat-icon> Unlocks
+    </button>
+    <button
+      mat-flat-button
+      class="menu-btn"
+      (click)="open('upgrades')"
+      [matBadge]="game.affordableUpgrades()"
+      [matBadgeHidden]="!game.affordableUpgrades()"
+      matBadgeColor="warn"
+    >
+      <mat-icon>paid</mat-icon> Cash Upgrades
+    </button>
+    <button
+      mat-flat-button
+      class="menu-btn"
+      (click)="open('angelupgrades')"
+      [matBadge]="game.affordableAngelUpgrades()"
+      [matBadgeHidden]="!game.affordableAngelUpgrades()"
+      matBadgeColor="warn"
+    >
+      <mat-icon>auto_awesome</mat-icon> Angel Upgrades
+    </button>
+    <button
+      mat-flat-button
+      class="menu-btn"
+      (click)="open('managers')"
+      [matBadge]="game.affordableManagers()"
+      [matBadgeHidden]="!game.affordableManagers()"
+      matBadgeColor="warn"
+    >
+      <mat-icon>sports</mat-icon> Managers
+    </button>
+    <button
+      mat-flat-button
+      class="menu-btn"
+      (click)="openInvestors()"
+      [matBadge]="'+' + (game.claimableAngels() | bigNumber)"
+      [matBadgeHidden]="!game.claimableAngels()"
+      matBadgeColor="warn"
+    >
+      <mat-icon>diversity_3</mat-icon> Investors
+    </button>
+  </nav>
+
+  <main class="pitch">
+    @if (world) {
+      <section class="products">
+        @for (product of world.products; track product.id) {
+          <app-produit [product]="product" />
+        }
+      </section>
+    } @else if (game.loading()) {
+      <div class="placeholder">
+        <mat-spinner diameter="48" />
+        <p>Loading {{ game.user() }}'s empire…</p>
+      </div>
+    } @else {
+      <div class="placeholder">
+        <p class="error">Could not reach the server.</p>
+        <p class="detail">{{ game.loadError() }}</p>
+        <button mat-flat-button (click)="game.loadWorld()">Try again</button>
+      </div>
+    }
+  </main>
+</div>
+
+<!-- Every queued banner is rendered; CSS shows (and animates) only the first one. -->
+<div class="celebrations">
+  @for (c of game.celebrations(); track c.id) {
+    <div class="celebration" role="status" (animationend)="celebrationDone(c.id, $event)">
+      <span class="celebration-title">{{ c.title }}</span>
+      <strong class="celebration-name">{{ c.name }}</strong>
+      <span class="celebration-detail">{{ c.detail }}</span>
+    </div>
+  }
+</div>

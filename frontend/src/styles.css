@@ -1,0 +1,44 @@
+:root {
+  --pitch: #1f7a3a;
+  --pitch-dark: #0f5226;
+  --pitch-light: #4cc86e;
+  --gold: #f6c12b;
+  --gold-dark: #9a6b00;
+  --card-bg: #f6fbf4;
+  --card-border: #d6e6d3;
+  --muted: #5d6b60;
+  --line: rgb(255 255 255 / 9%);
+}
+
+body {
+  /* Floodlit pitch: atmospheric glow, halfway line, centre circle, mowed stripes. */
+  background:
+    radial-gradient(ellipse at 50% -10%, rgb(160 255 180 / 22%), transparent 55%),
+    linear-gradient(90deg, transparent calc(50% - 1px), var(--line) calc(50% - 1px) calc(50% + 1px), transparent calc(50% + 1px)),
+    radial-gradient(circle at 50% 55%, transparent 139px, var(--line) 140px 142px, transparent 143px),
+    radial-gradient(circle at 50% 55%, var(--line) 5px, transparent 6px),
+    repeating-linear-gradient(90deg, rgb(255 255 255 / 3.5%) 0 90px, transparent 90px 180px),
+    linear-gradient(180deg, #23843f, #17602d);
+  background-attachment: fixed;
+  font-family: Roboto, 'Helvetica Neue', sans-serif;
+}
+
+/* Dialogs: fast fade + small rise (Material animates the transform/opacity transitions). */
+.fe-dialog .mat-mdc-dialog-surface {
+  transform: translateY(16px) scale(0.98);
+  border: 3px solid var(--card-border);
+}
+
+.cdk-overlay-backdrop {
+  transition-duration: 200ms !important;
+}
+
+.cdk-overlay-dark-backdrop.cdk-overlay-backdrop-showing {
+  background: rgb(4 30 12 / 55%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fe-dialog .mat-mdc-dialog-surface {
+    transform: none;
+  }
+}

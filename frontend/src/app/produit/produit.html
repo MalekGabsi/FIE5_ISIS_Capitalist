@@ -1,0 +1,68 @@
+@let p = product();
+<article
+  #card
+  class="card"
+  [class.locked]="!owned()"
+  [class.producing]="producing()"
+  [class.auto]="automated()"
+>
+  <span #flash class="flash" aria-hidden="true"></span>
+
+  <div class="logo-wrap">
+    <button
+      #logo
+      type="button"
+      class="logo"
+      [disabled]="!owned() || automated() || producing()"
+      [attr.aria-label]="'Produce ' + p.name"
+      (click)="launch()"
+    >
+      <img [src]="game.imageUrl(p.logo)" [alt]="p.name" />
+    </button>
+    <span #qty class="qty">{{ p.quantite }}</span>
+
+    @for (f of floats(); track f.id) {
+      <span class="float" [style.--dx.px]="f.dx" (animationend)="removeFloat(f.id, $event)">
+        {{ f.text }}
+      </span>
+    }
+  </div>
+
+  <div class="body">
+    <header>
+      <h2>{{ p.name }}</h2>
+      @if (automated()) {
+        <span class="status auto-status" title="A manager runs this product">
+          <span class="pulse-dot" aria-hidden="true"></span> AUTO
+        </span>
+      } @else if (owned() && !producing()) {
+        <span class="status idle-status">Tap the logo to play</span>
+      }
+    </header>
+
+    <div class="production">
+      <div
+        class="bar"
+        [class.active]="producing()"
+        [class.turbo]="turbo()"
+        role="progressbar"
+        aria-valuemin="0"
+        aria-valuemax="100"
+        [attr.aria-valuenow]="turbo() ? 100 : progressPct()"
+        [attr.aria-label]="p.name + ' production'"
+      >
+        <div #fill class="fill"><span class="shine"></span></div>
+        <span class="bar-label">${{ revenue() | bigNumber }}</span>
+      </div>
+      <span class="time">{{ (producing() ? p.timeleft : p.vitesse) | duration }}</span>
+    </div>
+
+    <div class="buy-row">
+      <button mat-flat-button class="buy" [disabled]="!canBuy()" (click)="buy()">
+        Buy ×{{ buyQty() }}
+        <span class="cost">${{ (buyQty() > 0 ? buyCost() : p.cout) | bigNumber }}</span>
+      </button>
+      <span class="unit">Next unit ${{ p.cout | bigNumber }}</span>
+    </div>
+  </div>
+</article>

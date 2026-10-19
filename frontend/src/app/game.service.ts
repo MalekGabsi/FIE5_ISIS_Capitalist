@@ -9,10 +9,12 @@ import {
   untracked,
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatSnackBar, MatSnackBarRef } from '@angular/material/snack-bar';
 import { Apollo } from 'apollo-angular';
 import { firstValueFrom, Observable } from 'rxjs';
-import { BACKEND_URL, TICK_MS, USERNAME_STORAGE_KEY } from './game.config';
+import { BackendUrl } from './backend-url';
+import { formatBigNumber } from './format';
+import { TICK_MS, USERNAME_STORAGE_KEY } from './game.config';
 import {
   ALL_PRODUCTS,
   advanceProduction,
@@ -39,6 +41,8 @@ import {
 
 const USERNAME_PATTERN = /^[A-Za-z0-9_-]{1,30}$/;
 const MAX_FX = 40;
+/** A snackbar stays at least this long before a newer message replaces it. */
+const MIN_MESSAGE_MS = 900;
 
 export interface UnlockProgress {
   palier: Palier;
@@ -68,7 +72,9 @@ export class GameService {
   private readonly snackBar = inject(MatSnackBar);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
-  readonly backendUrl = BACKEND_URL;
+  private readonly backend = inject(BackendUrl);
+  /** Backend address (editable in the UI); used for GraphQL and images. */
+  readonly backendUrl = this.backend.value.asReadonly();
 
   readonly user = signal(this.initialUser());
   readonly world = signal<World | null>(null);
@@ -142,7 +148,10 @@ export class GameService {
   private loadedUser: string | null = null;
   private resyncQueued = false;
   private nextId = 1;
+  /** Snackbar texts waiting to be shown (the one on screen is currentMessage). */
   private readonly pendingMessages: string[] = [];
+  private currentMessage: { text: string; ref: MatSnackBarRef<unknown>; shownAt: number } | null = null;
+  private messageTimer: ReturnType<typeof setTimeout> | undefined;
 
   constructor() {
     if (!this.isBrowser) return;
@@ -160,11 +169,26 @@ export class GameService {
 
     this.lastTick.set(performance.now());
     const timer = setInterval(() => this.tick(), TICK_MS);
-    inject(DestroyRef).onDestroy(() => clearInterval(timer));
+    inject(DestroyRef).onDestroy(() => {
+      clearInterval(timer);
+      clearTimeout(this.messageTimer);
+    });
   }
 
   imageUrl(logo: string): string {
-    return `${this.backendUrl}/${logo.replace(/^\/+/, '')}`;
+    return `${this.backendUrl()}/${logo.replace(/^\/+/, '')}`;
+  }
+
+  /** Switches to another backend address and reloads the world from it. */
+  setBackendUrl(input: string): boolean {
+    const url = this.backend.set(input);
+    if (!url) {
+      this.notify('Invalid backend address (expected e.g. http://localhost:3000).');
+      return false;
+    }
+    this.notify(`Backend: ${url}`);
+    this.loadWorld();
+    return true;
   }
 
   targetLabel(palier: Palier): string {
@@ -224,6 +248,7 @@ export class GameService {
 
   /** Returns true when the purchase was made. */
   buy(productId: number, quantity: number): boolean {
+    this.tick();
     const world = this.world();
     if (!world) return false;
     const result = buyProduct(world, productId, quantity);
@@ -236,9 +261,12 @@ export class GameService {
     for (const unlock of result.unlocked) {
       this.celebrate('Unlocked', unlock.name, `${this.targetFor(unlock)} · ${bonusLabel(unlock)}`);
     }
-    if (result.unlocked.length) {
-      this.notify(`Unlocked: ${result.unlocked.map((u) => `${u.name} (${bonusLabel(u)})`).join(', ')}`);
-    }
+    const name = world.products.find((p) => p.id === productId)?.name ?? 'product';
+    const unlocked = result.unlocked.map((u) => `${u.name} (${bonusLabel(u)})`).join(', ');
+    this.notify(
+      `Bought ${quantity} × ${name} for $${formatBigNumber(result.cost)}` +
+        (unlocked ? ` — Unlocked: ${unlocked}` : ''),
+    );
     const user = this.user();
     this.sync('acheterQtProduit', () =>
       this.apollo.mutate({
@@ -251,6 +279,7 @@ export class GameService {
 
   /** Returns true when a production cycle was started. */
   launchProduction(productId: number): boolean {
+    this.tick();
     const world = this.world();
     const next = world && startProduction(world, productId);
     if (!next) return false;
@@ -329,29 +358,51 @@ export class GameService {
     this.celebrations.update((list) => list.filter((c) => c.id !== id));
   }
 
-  /** Shows snackbars one after another so a sync error never hides an unlock message. */
+  /**
+   * Shows a snackbar. Messages never pile up behind each other: a new one
+   * replaces the current one as soon as that has been readable for
+   * MIN_MESSAGE_MS, and only the 3 most recent waiting messages are kept.
+   */
   notify(message: string): void {
-    if (this.pendingMessages.includes(message)) return;
+    if (this.currentMessage?.text === message || this.pendingMessages.includes(message)) return;
     this.pendingMessages.push(message);
-    // Keep the one on screen plus the 3 most recent: never lag behind the game.
-    if (this.pendingMessages.length > 4) this.pendingMessages.splice(1, 1);
-    if (this.pendingMessages.length === 1) this.showNextMessage();
+    if (this.pendingMessages.length > 3) this.pendingMessages.shift();
+    if (this.currentMessage) this.hurryCurrentMessage();
+    else this.showNextMessage();
+  }
+
+  /** Dismisses the current snackbar once it has been readable long enough. */
+  private hurryCurrentMessage(): void {
+    if (!this.currentMessage || this.messageTimer !== undefined) return;
+    const shownFor = performance.now() - this.currentMessage.shownAt;
+    const current = this.currentMessage.ref;
+    this.messageTimer = setTimeout(() => current.dismiss(), Math.max(0, MIN_MESSAGE_MS - shownFor));
   }
 
   private showNextMessage(): void {
-    const message = this.pendingMessages[0];
-    if (message === undefined) return;
-    const duration = this.pendingMessages.length > 1 ? 2000 : 3500;
-    this.snackBar
-      .open(message, 'OK', { duration })
-      .afterDismissed()
-      .subscribe(() => {
-        this.pendingMessages.shift();
-        this.showNextMessage();
-      });
+    const text = this.pendingMessages.shift();
+    if (text === undefined) {
+      this.currentMessage = null;
+      return;
+    }
+    const ref = this.snackBar.open(text, 'OK', { duration: 3500 });
+    this.currentMessage = { text, ref, shownAt: performance.now() };
+    ref.afterDismissed().subscribe(() => {
+      clearTimeout(this.messageTimer);
+      this.messageTimer = undefined;
+      this.showNextMessage();
+    });
+    // More messages are waiting: this one only stays for the minimum time.
+    if (this.pendingMessages.length) this.hurryCurrentMessage();
   }
 
-  private tick(): void {
+  /**
+   * Advances production to now (the central game loop step). Also called
+   * before every player action, like the server's updateWorld, so an action
+   * never shares a tick interval with time that elapsed before it, and by the
+   * progress bar when a cycle reaches 100%, so the payout matches the bar.
+   */
+  tick(): void {
     const now = performance.now();
     const elapsed = now - this.lastTick();
     this.lastTick.set(now);
@@ -366,7 +417,7 @@ export class GameService {
     if (replay || user !== this.loadedUser) {
       this.replayKey.update((k) => k + 1);
       // Messages about the previous world are no longer relevant.
-      this.pendingMessages.splice(1);
+      this.pendingMessages.length = 0;
     }
     this.loadedUser = user;
     this.lastTick.set(performance.now());
@@ -407,6 +458,7 @@ export class GameService {
   }
 
   private buyPalierLocally(list: PalierList, name: string): boolean {
+    this.tick();
     const world = this.world();
     const next = world && buyPalier(world, list, name);
     if (!next) {

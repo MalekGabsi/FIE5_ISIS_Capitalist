@@ -87,11 +87,18 @@ export class Produit {
         fill.style.clipPath = '';
         return;
       }
+      const id = untracked(() => this.product().id);
       let handle = 0;
       const frame = () => {
-        const { timeleft, vitesse } = this.product();
-        const sinceTick = Math.max(0, performance.now() - this.game.lastTick());
-        const progress = vitesse > 0 ? 1 - Math.max(0, timeleft - sinceTick) / vitesse : 0;
+        // Read the product from the service, not from the input: the input only
+        // catches up at the next change detection, while lastTick is already new.
+        const product = this.game.world()?.products.find((p) => p.id === id);
+        if (!product) return;
+        const { timeleft, vitesse } = product;
+        const remaining = Math.max(0, timeleft - Math.max(0, performance.now() - this.game.lastTick()));
+        // The bar is full: pay now instead of waiting up to one tick period.
+        if (remaining === 0 && timeleft > 0) this.game.tick();
+        const progress = vitesse > 0 ? 1 - remaining / vitesse : 0;
         fill.style.clipPath = `inset(0 ${(100 * (1 - progress)).toFixed(2)}% 0 0)`;
         handle = requestAnimationFrame(frame);
       };

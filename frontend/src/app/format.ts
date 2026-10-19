@@ -47,15 +47,17 @@ export function formatCompact(value: number): string {
   return `${scaled}${COMPACT_SUFFIXES[group]}`;
 }
 
-/** Milliseconds -> "0.4s", "12.0s", "3m 05s", "2h 03m 10s". */
+/**
+ * Milliseconds -> "hours:minutes:seconds.tenths", as the assignment requires:
+ * 500 -> "00:00:00.5", 185 200 -> "00:03:05.2", 3 723 400 -> "01:02:03.4".
+ */
 export function formatDuration(ms: number): string {
-  const safe = Math.max(0, ms);
-  if (safe < 60_000) return `${(safe / 1000).toFixed(1)}s`;
-  const totalSeconds = Math.ceil(safe / 1000);
-  const h = Math.floor(totalSeconds / 3600);
-  const m = Math.floor((totalSeconds % 3600) / 60);
-  const s = String(totalSeconds % 60).padStart(2, '0');
-  return h > 0 ? `${h}h ${String(m).padStart(2, '0')}m ${s}s` : `${m}m ${s}s`;
+  const tenths = Math.round(Math.max(0, ms) / 100);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const h = Math.floor(tenths / 36_000);
+  const m = Math.floor((tenths % 36_000) / 600);
+  const s = Math.floor((tenths % 600) / 10);
+  return `${pad(h)}:${pad(m)}:${pad(s)}.${tenths % 10}`;
 }
 
 @Pipe({ name: 'bigNumber' })

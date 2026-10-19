@@ -34,7 +34,7 @@ export type LancerProductionProduitMutationVariables = Exact<{
 }>;
 
 
-export type LancerProductionProduitMutation = { readonly lancerProductionProduit: { readonly id: number, readonly timeleft: number } };
+export type LancerProductionProduitMutation = { readonly lancerProductionProduit: { readonly id: number, readonly timeleft: number } | null };
 
 export type EngagerManagerMutationVariables = Exact<{
   user: string;

@@ -1,11 +1,11 @@
 import {
   afterRenderEffect,
   Component,
+  computed,
   effect,
   ElementRef,
   inject,
   linkedSignal,
-  signal,
   untracked,
   viewChild,
   viewChildren,
@@ -53,7 +53,18 @@ export class App {
 
   /** Editable copy of the player name, reset whenever the real name changes. */
   protected readonly nameDraft = linkedSignal(() => this.game.user());
-  protected readonly worldLogoFailed = signal(false);
+  /** Editable copy of the backend address, reset whenever the real one changes. */
+  protected readonly backendDraft = linkedSignal(() => this.game.backendUrl());
+
+  private readonly worldLogoUrl = computed(() => {
+    const world = this.game.world();
+    return world ? this.game.imageUrl(world.logo) : null;
+  });
+  /** Fallback emoji when the logo cannot load; retried when its URL changes. */
+  protected readonly worldLogoFailed = linkedSignal({
+    source: this.worldLogoUrl,
+    computation: () => false,
+  });
 
   private lastFxId = 0;
   private lastPulseAt = 0;
@@ -94,6 +105,12 @@ export class App {
   protected submitName(): void {
     if (!this.game.setUser(this.nameDraft())) {
       this.nameDraft.set(this.game.user());
+    }
+  }
+
+  protected submitBackend(): void {
+    if (!this.game.setBackendUrl(this.backendDraft())) {
+      this.backendDraft.set(this.game.backendUrl());
     }
   }
 

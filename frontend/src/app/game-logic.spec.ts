@@ -130,6 +130,8 @@ describe('managers and upgrades', () => {
     expect(next.activeangels).toBe(2);
     expect(next.angelbonus).toBe(3);
     expect(next.money).toBe(1000);
+    // idcible -1 (angel efficiency): products keep their revenue and speed.
+    expect(next.products).toEqual(w.products);
   });
 });
 
@@ -168,9 +170,11 @@ describe('formatting', () => {
     expect(formatBigNumber(4.28)).toBe('4.28');
     expect(formatBigNumber(12345.678)).toBe('12,346');
     expect(formatBigNumber(4.2e9)).toBe('4.200 billion');
-    expect(formatDuration(500)).toBe('0.5s');
-    expect(formatDuration(185_000)).toBe('3m 05s');
-    expect(formatDuration(7_390_000)).toBe('2h 03m 10s');
+    expect(formatDuration(500)).toBe('00:00:00.5');
+    expect(formatDuration(185_200)).toBe('00:03:05.2');
+    expect(formatDuration(3_723_400)).toBe('01:02:03.4');
+    expect(formatDuration(48_000)).toBe('00:00:48.0');
+    expect(formatDuration(0)).toBe('00:00:00.0');
   });
 });
 

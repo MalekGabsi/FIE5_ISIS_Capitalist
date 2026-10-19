@@ -46,7 +46,7 @@ getWorld(user: String!): World
 }
 type Mutation {
 acheterQtProduit(user: String!, id: Int!, quantite: Int!): Product
-lancerProductionProduit(user: String!, id: Int!): Product!
+lancerProductionProduit(user: String!, id: Int!): Product
 engagerManager(user: String!, name: String!): Palier
 acheterCashUpgrade(user: String!, name: String!): Palier
 acheterAngelUpgrade(user: String!, name: String!): Palier

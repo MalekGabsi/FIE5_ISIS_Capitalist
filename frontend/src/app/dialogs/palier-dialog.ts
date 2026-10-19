@@ -36,7 +36,7 @@ const KINDS: Record<PalierDialogKind, KindConfig> = {
   },
   angelupgrades: {
     title: 'Angel Upgrades',
-    intro: 'Spend active angels on permanent boosts. Spent angels no longer add their bonus.',
+    intro: 'Spend active angels on boosts for this season (a reset removes them). Spent angels no longer add their bonus.',
     empty: 'No angel upgrade available.',
     action: 'Buy',
   },

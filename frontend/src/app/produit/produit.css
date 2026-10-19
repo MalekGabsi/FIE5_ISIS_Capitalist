@@ -302,7 +302,7 @@ h2 {
 }
 
 .time {
-  min-width: 52px;
+  min-width: 76px;
   text-align: right;
   font-variant-numeric: tabular-nums;
   color: var(--muted);

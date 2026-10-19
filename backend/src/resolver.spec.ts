@@ -173,12 +173,18 @@ describe('ISIS Capitalist backend', () => {
 
     it('pays angel upgrades with active angels and handles the ange type', async () => {
       seed('hugo', (w) => (w.activeangels = 12));
+      const before = saved('hugo');
       const upgrade = await resolver.acheterAngelUpgrade('hugo', 'Loyal Fans');
       expect(upgrade.typeratio).toBe('ange');
+      expect(upgrade.idcible).toBe(-1); // PDF convention: -1 = angel efficiency
       const world = saved('hugo');
       expect(world.activeangels).toBe(2);
       expect(world.angelbonus).toBe(3);
       expect(world.money).toBe(1000);
+      // An ange upgrade never touches products, whatever its idcible.
+      expect(world.products.map((p) => [p.revenu, p.vitesse])).toEqual(
+        before.products.map((p) => [p.revenu, p.vitesse]),
+      );
       await expect(resolver.acheterAngelUpgrade('hugo', 'Lucky Charm')).rejects.toThrow(
         /Not enough angels/,
       );

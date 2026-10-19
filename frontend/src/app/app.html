@@ -112,6 +112,32 @@
     >
       <mat-icon>diversity_3</mat-icon> Investors
     </button>
+
+    <div class="server">
+      <label for="backend-url">Backend server</label>
+      <div class="server-row">
+        <input
+          id="backend-url"
+          name="backend"
+          type="url"
+          spellcheck="false"
+          aria-label="Backend address"
+          placeholder="http://localhost:3000"
+          [value]="backendDraft()"
+          (input)="backendDraft.set($any($event.target).value)"
+          (keydown.enter)="submitBackend()"
+        />
+        <button
+          mat-icon-button
+          type="button"
+          (click)="submitBackend()"
+          title="Connect to this backend"
+          aria-label="Connect to this backend"
+        >
+          <mat-icon>sync</mat-icon>
+        </button>
+      </div>
+    </div>
   </nav>
 
   <main class="pitch">
